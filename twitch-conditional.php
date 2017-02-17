@@ -25,12 +25,13 @@ function twitch_is_live( $twitchname = null ) {
 		return false;		
 	} else {
 		$twitchlive = json_decode(@file_get_contents('https://api.twitch.tv/kraken/streams/'.$twitchname.'?client_id='. $client_id), true);
+
 		$twitchonline = $twitchlive["stream"];
 
 		if ( $twitchonline ) {
 			return true;
 		} else {
-			print "Error: Problem Loading Stream. API may be down.";			
+			print "Error: Problem Loading Stream. Check Your API Key.";			
 			return false;
 		}		
 	}
