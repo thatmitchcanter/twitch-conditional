@@ -16,7 +16,11 @@ I like WordPress. I like the way it does conditional tags, and I wanted my plugi
         // CODE FOR IF USER IS NOT STREAMING
     } ?>
     
-That's it. Simply change the username mentioned in the conditional. If a username is not set, the value is set to OFFLINE.
+That's it. Simply change the username mentioned in the conditional. If a username is not set, the plugin will return an error message.
+
+## Client ID Update
+
+Twitch now requires a Client ID to be sent with all JSON requests.  That means everyone that tries to use this plugin needs to go to https://www.twitch.tv/settings/connections to generate a new 'Developer Application'.  Once you've done that, however, and entered it into the plugin's options page, all of the requests will finally begin to work again.
 
 ## Usage
 
