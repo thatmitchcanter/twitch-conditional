@@ -3,7 +3,7 @@
  * @twitch-conditional
  * Plugin Name:       Twitch Conditional
  * Description:       Allows a template tag to check a Twitch stream and display content is the streamer is live.
- * Version:           1.0.0
+ * Version:           1.1.0
  * Author:            Mitch Canter
  * Author URI:        http://www.mitchcanter.com/
  * License:           GPL-2.0+
