@@ -11,11 +11,19 @@
  * Text Domain:       twitch-conditional
  */
 
+function twitchRequest($url) {
+   $c = curl_init();
+   curl_setopt($c, CURLOPT_URL, $url);
+   curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+   $data = curl_exec($c);
+   curl_close($c);
+   return $data;
+}
+
 function twitch_is_live( $twitchname = null ) {
 
 	$client_id = get_option('twitch_client_id');
 	$client_id = $client_id['clientid'];
-	var_dump($client_id);
 
 	if (strlen($client_id) < 1) {
 		print "No Client ID Specified!";
@@ -24,14 +32,14 @@ function twitch_is_live( $twitchname = null ) {
 		print "No Twitch Name Specified!";
 		return false;		
 	} else {
-		$twitchlive = json_decode(@file_get_contents('https://api.twitch.tv/kraken/streams/'.$twitchname.'?client_id='. $client_id), true);
+
+        $twitchlive = json_decode(twitchRequest('https://api.twitch.tv/kraken/streams/'.$twitchname.'?client_id='. $client_id), true);
 
 		$twitchonline = $twitchlive["stream"];
 
 		if ( $twitchonline ) {
 			return true;
 		} else {
-			print "Error: Problem Loading Stream. Check Your API Key.";			
 			return false;
 		}		
 	}
