@@ -45,4 +45,5 @@ Add the above sample conditional to your template in order to utilize its functi
 ### Changelog
 
 1.0.0 - Initial Release
+
 1.1.0 - Swapped file_get_contents for cURL, added API Key and Documentation.
