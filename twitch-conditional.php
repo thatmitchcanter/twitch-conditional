@@ -11,15 +11,6 @@
  * Text Domain:       twitch-conditional
  */
 
-function twitchRequest($url) {
-   $c = curl_init();
-   curl_setopt($c, CURLOPT_URL, $url);
-   curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
-   $data = curl_exec($c);
-   curl_close($c);
-   return $data;
-}
-
 function twitch_is_live( $twitchname = null ) {
 
 	$client_id = get_option('twitch_client_id');
@@ -30,18 +21,32 @@ function twitch_is_live( $twitchname = null ) {
 		return false;
 	} elseif ($twitchname == null) {
 		print "No Twitch Name Specified!";
-		return false;		
+		return false;
 	} else {
 
-        $twitchlive = json_decode(twitchRequest('https://api.twitch.tv/kraken/streams/'.$twitchname.'?client_id='. $client_id), true);
+    $url = 'https://api.twitch.tv/kraken/streams/'.$twitchname.'?client_id='. $client_id;
 
+    //  Initiate curl
+    $ch = curl_init();
+    // Disable SSL verification
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    // Will return the response, if false it print the response
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    // Set the url
+    curl_setopt($ch, CURLOPT_URL, $url);
+    // Execute
+    $result=curl_exec($ch);
+    // Closing
+    curl_close($ch);
+
+    $twitchlive = json_decode($result, true);  
 		$twitchonline = $twitchlive["stream"];
 
 		if ( $twitchonline ) {
 			return true;
 		} else {
 			return false;
-		}		
+		}
 	}
 }
 
@@ -68,10 +73,10 @@ class TwitchConditionalSettings
     {
         // This page will be under "Settings"
         add_options_page(
-            'Settings Admin', 
-            'Twitch Conditional', 
-            'manage_options', 
-            'twitch-conditional-settings', 
+            'Settings Admin',
+            'Twitch Conditional',
+            'manage_options',
+            'twitch-conditional-settings',
             array( $this, 'create_admin_page' )
         );
     }
@@ -101,7 +106,7 @@ class TwitchConditionalSettings
      * Register and add settings
      */
     public function page_init()
-    {        
+    {
         register_setting(
             'twitch_options', // Option group
             'twitch_client_id', // Option name
@@ -113,15 +118,15 @@ class TwitchConditionalSettings
             'Twitch Conditional Settings', // clientid
             array( $this, 'print_section_info' ), // Callback
             'twitch-conditional-settings' // Page
-        );   
+        );
 
         add_settings_field(
-            'client_ID', 
-            'Client ID', 
-            array( $this, 'clientid_callback' ), 
-            'twitch-conditional-settings', 
+            'client_ID',
+            'Client ID',
+            array( $this, 'clientid_callback' ),
+            'twitch-conditional-settings',
             'twitch_section_id'
-        );      
+        );
     }
 
     /**
@@ -139,7 +144,7 @@ class TwitchConditionalSettings
         return $new_input;
     }
 
-    /** 
+    /**
      * Print the Section text
      */
     public function print_section_info()
@@ -147,7 +152,7 @@ class TwitchConditionalSettings
         print 'Please visit <a href="https://www.twitch.tv/settings/connections">your Twitch "Connections" Settings page</a> and register a new Developer Application.  Once you have done this, enter your Client ID Below.  Twitch requires a client ID with any API Requests.';
     }
 
-    /** 
+    /**
      * Get the settings option array and print one of its values
      */
     public function id_number_callback()
@@ -158,7 +163,7 @@ class TwitchConditionalSettings
         );
     }
 
-    /** 
+    /**
      * Get the settings option array and print one of its values
      */
     public function clientid_callback()
