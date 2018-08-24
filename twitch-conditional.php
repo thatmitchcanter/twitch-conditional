@@ -26,27 +26,41 @@ function twitch_is_live( $twitchname = null ) {
 
     $url = 'https://api.twitch.tv/kraken/streams/'.$twitchname.'?client_id='. $client_id;
 
-    //  Initiate curl
-    $ch = curl_init();
-    // Disable SSL verification
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    // Will return the response, if false it print the response
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    // Set the url
-    curl_setopt($ch, CURLOPT_URL, $url);
-    // Execute
-    $result=curl_exec($ch);
-    // Closing
-    curl_close($ch);
+    // //  Initiate curl
+    // $ch = curl_init();
+    // // Disable SSL verification
+    // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    // // Will return the response, if false it print the response
+    // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    // // Set the url
+    // curl_setopt($ch, CURLOPT_URL, $url);
+    // // Execute
+    // $result=curl_exec($ch);
+    // // Closing
+    // curl_close($ch);
+		//
+    // $twitchlive = json_decode($result, true);
+		// $twitchonline = $twitchlive["stream"];
+		//
+		// if ( $twitchonline ) {
+		// 	return true;
+		// } else {
+		// 	return false;
+		// }
+		//
+		$args = array(
+		    'sslverify'   => false,
+		);
 
-    $twitchlive = json_decode($result, true);  
-		$twitchonline = $twitchlive["stream"];
+		$response = wp_remote_get($url, $args);
 
-		if ( $twitchonline ) {
-			return true;
+		if ( is_array( $response ) && ! is_wp_error( $response ) ) {
+	    return true;
 		} else {
 			return false;
 		}
+
+
 	}
 }
 
