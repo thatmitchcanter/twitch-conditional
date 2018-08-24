@@ -60,5 +60,7 @@ This will show content if the streamer is NOT live.
 ### Changelog
 
 1.0.0 - Initial Release
+
 1.1.0 - Swapped file_get_contents for cURL, added API Key and Documentation.
+
 1.2.0 - Swapped cURL calls for wp_remote_get. Added Shortcodes for [twitch_is_live] and [twitch_is_not_live]
