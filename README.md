@@ -54,8 +54,8 @@ This will show content if the streamer is NOT live.
 
 ### Todo
 
-* Stream Details Available in Shortcodes or Template Tags (Title, Game, Viewers, Etc)
-* Default
+* Stream Details Available in Shortcodes or Template Tags (Title, Game, Viewers, Etc).
+* Default Content with designs (Cards, Banners, etc) to provide easier use of the plugin.
 
 ### Changelog
 
