@@ -3,15 +3,21 @@
  * @twitch-conditional
  * Plugin Name:       Twitch Conditional
  * Description:       Allows a template tag to check a Twitch stream and display content is the streamer is live.
- * Version:           1.1.0
+ * Version:           1.2.0
  * Author:            Mitch Canter
  * Author URI:        http://www.mitchcanter.com/
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       twitch-conditional
+ * Twitch IS live Template Tag
+ *
+ *
+ *
+ * <?php if (twitch_is_live('username')) { CONTENT } ; ?>
+ * Displays content the channel IS live. Template Tag Usage
  */
 
-function twitch_is_live( $twitchname = null ) {
+function twitch_is_live( $twitchname = null) {
 
 	$client_id = get_option('twitch_client_id');
 	$client_id = $client_id['clientid'];
@@ -26,35 +32,14 @@ function twitch_is_live( $twitchname = null ) {
 
     $url = 'https://api.twitch.tv/kraken/streams/'.$twitchname.'?client_id='. $client_id;
 
-    // //  Initiate curl
-    // $ch = curl_init();
-    // // Disable SSL verification
-    // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    // // Will return the response, if false it print the response
-    // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    // // Set the url
-    // curl_setopt($ch, CURLOPT_URL, $url);
-    // // Execute
-    // $result=curl_exec($ch);
-    // // Closing
-    // curl_close($ch);
-		//
-    // $twitchlive = json_decode($result, true);
-		// $twitchonline = $twitchlive["stream"];
-		//
-		// if ( $twitchonline ) {
-		// 	return true;
-		// } else {
-		// 	return false;
-		// }
-		//
 		$args = array(
 		    'sslverify'   => false,
 		);
 
 		$response = wp_remote_get($url, $args);
+		$streamObj = json_decode($response['body']);
 
-		if ( is_array( $response ) && ! is_wp_error( $response ) ) {
+		if ( $streamObj->stream ) {
 	    return true;
 		} else {
 			return false;
@@ -63,6 +48,108 @@ function twitch_is_live( $twitchname = null ) {
 
 	}
 }
+
+/*
+ * Twitch IS live
+ * [twitch_is_live twitchname='username']
+ * Displays content the channel IS live. Shortcode Usage
+ */
+
+function twitch_is_live_shortcode( $atts = [], $content = null ) {
+	$atts = array_change_key_case((array)$atts, CASE_LOWER);
+
+	$twitch_is_live_atts = shortcode_atts(
+		[
+				'twitchname' => 'thatmitchcanter'
+		], $atts);
+
+	$client_id = get_option('twitch_client_id');
+	$client_id = $client_id['clientid'];
+
+	if (strlen($client_id) < 1) {
+		print "No Client ID Specified!";
+		return false;
+	} elseif ($twitch_is_live_atts['twitchname'] == null) {
+		print "No Twitch Name Specified!";
+		return false;
+	} else {
+
+    $url = 'https://api.twitch.tv/kraken/streams/'.$twitch_is_live_atts['twitchname'].'?client_id='. $client_id;
+
+		$args = array(
+		    'sslverify'   => false,
+		);
+
+		$response = wp_remote_get($url, $args);
+		$streamObj = json_decode($response['body']);
+
+		if ( $streamObj->stream ) {
+	    return $content;
+		} else {
+			return false;
+		}
+
+
+	}
+
+}
+
+/*
+ * Twitch IS NOT live
+ * [twitch_is_not_live twitchname='username']
+ * Displays content the channel IS NOT live. Shortcode Usage
+ */
+
+function twitch_is_not_live_shortcode( $atts = [], $content = null ) {
+	$atts = array_change_key_case((array)$atts, CASE_LOWER);
+
+	$twitch_is_not_live_atts = shortcode_atts(
+		[
+				'twitchname' => 'thatmitchcanter'
+		], $atts);
+
+	$client_id = get_option('twitch_client_id');
+	$client_id = $client_id['clientid'];
+
+	if (strlen($client_id) < 1) {
+		print "No Client ID Specified!";
+		return false;
+	} elseif ($twitch_is_not_live_atts['twitchname'] == null) {
+		print "No Twitch Name Specified!";
+		return false;
+	} else {
+
+    $url = 'https://api.twitch.tv/kraken/streams/'.$twitch_is_not_live_atts['twitchname'].'?client_id='. $client_id;
+
+		$args = array(
+		    'sslverify'   => false,
+		);
+
+		$response = wp_remote_get($url, $args);
+		$streamObj = json_decode($response['body']);
+
+		if ( !$streamObj->stream ) {
+	    return $content;
+		} else {
+			return false;
+		}
+
+
+	}
+
+}
+
+function twitch_shortcodes()
+{
+		add_shortcode('twitch_is_live', 'twitch_is_live_shortcode');
+    add_shortcode('twitch_is_not_live', 'twitch_is_not_live_shortcode');
+}
+
+add_action('init', 'twitch_shortcodes');
+
+/**
+ * Options Panel
+ */
 
 class TwitchConditionalSettings
 {
