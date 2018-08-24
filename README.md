@@ -52,14 +52,6 @@ This will show content if the streamer is live.
 
 This will show content if the streamer is NOT live.
 
-### Sample Code
-
-    <?php if (twitch_is_live('username')) { ?>
-        <p><a href="##twitch_url##">Currently Streaming Live!</a></p>
-    <?php } else { ?>
-        <p>This Twitch user is currently offline!</p>
-    <?php } ?>		
-
 ### Todo
 
 * Stream Details Available in Shortcodes or Template Tags (Title, Game, Viewers, Etc)
