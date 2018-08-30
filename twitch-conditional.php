@@ -37,20 +37,26 @@ function twitch_is_live( $twitchname = null) {
 		);
 
 		$response = wp_remote_get($url, $args);
-		$streamObj = json_decode($response['body']);
+		if (!is_wp_error($response)) {
 
-		if ( $streamObj->stream ) {
-	    return true;
+			$streamObj = json_decode($response['body']);
+
+			if ( $streamObj->stream ) {
+		    return true;
+			} else {
+				return false;
+			}
+
 		} else {
+			print "Unable to access Twitch API.";
 			return false;
 		}
-
 
 	}
 }
 
 /*
- * Twitch IS live
+ * Twitch IS live Shortcode
  * [twitch_is_live twitchname='username']
  * Displays content the channel IS live. Shortcode Usage
  */
@@ -81,11 +87,18 @@ function twitch_is_live_shortcode( $atts = [], $content = null ) {
 		);
 
 		$response = wp_remote_get($url, $args);
-		$streamObj = json_decode($response['body']);
+		if (!is_wp_error($response)) {
 
-		if ( $streamObj->stream ) {
-	    return $content;
+			$streamObj = json_decode($response['body']);
+
+			if ( $streamObj->stream ) {
+		    return $content;
+			} else {
+				return false;
+			}
+
 		} else {
+			print "Unable to access Twitch API.";
 			return false;
 		}
 
@@ -95,7 +108,7 @@ function twitch_is_live_shortcode( $atts = [], $content = null ) {
 }
 
 /*
- * Twitch IS NOT live
+ * Twitch IS NOT live Shortcode
  * [twitch_is_not_live twitchname='username']
  * Displays content the channel IS NOT live. Shortcode Usage
  */
@@ -126,11 +139,18 @@ function twitch_is_not_live_shortcode( $atts = [], $content = null ) {
 		);
 
 		$response = wp_remote_get($url, $args);
-		$streamObj = json_decode($response['body']);
+		if (!is_wp_error($response)) {
 
-		if ( !$streamObj->stream ) {
-	    return $content;
+			$streamObj = json_decode($response['body']);
+
+			if ( !$streamObj->stream ) {
+		    return $content;
+			} else {
+				return false;
+			}
+
 		} else {
+			print "Unable to access Twitch API.";
 			return false;
 		}
 
@@ -146,6 +166,50 @@ function twitch_shortcodes()
 }
 
 add_action('init', 'twitch_shortcodes');
+
+/*
+ * Twitch Object
+ * Gathers the Twitch Object in a Variable if the user is live.
+ */
+
+ function twitch_object( $twitchname = null) {
+
+ 	$client_id = get_option('twitch_client_id');
+ 	$client_id = $client_id['clientid'];
+
+ 	if (strlen($client_id) < 1) {
+ 		print "No Client ID Specified!";
+ 		return false;
+ 	} elseif ($twitchname == null) {
+ 		print "No Twitch Name Specified!";
+ 		return false;
+ 	} else {
+
+     $url = 'https://api.twitch.tv/kraken/streams/'.$twitchname.'?client_id='. $client_id;
+
+ 		$args = array(
+ 		    'sslverify'   => false,
+ 		);
+
+ 		$response = wp_remote_get($url, $args);
+ 		if (!is_wp_error($response)) {
+
+ 			$streamObj = json_decode($response['body']);
+
+ 			if ( $streamObj->stream ) {
+ 		    return $streamObj->stream;
+ 			} else {
+ 				return false;
+ 			}
+
+ 		} else {
+ 			print "Unable to access Twitch API.";
+ 			return false;
+ 		}
+
+ 	}
+ }
+
 
 /**
  * Options Panel
