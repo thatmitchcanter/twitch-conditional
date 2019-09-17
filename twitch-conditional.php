@@ -3,7 +3,7 @@
  * @twitch-conditional
  * Plugin Name:       Twitch Conditional
  * Description:       Allows a template tag to check a Twitch stream and display content is the streamer is live.
- * Version:           1.2.0
+ * Version:           1.3.0
  * Author:            Mitch Canter
  * Author URI:        http://www.mitchcanter.com/
  * License:           GPL-2.0+
@@ -30,18 +30,20 @@ function twitch_is_live( $twitchname = null) {
 		return false;
 	} else {
 
-    $url = 'https://api.twitch.tv/kraken/streams/'.$twitchname.'?client_id='. $client_id;
+    $url = 'https://api.twitch.tv/helix/streams?user_login='.$twitchname;
 
 		$args = array(
 		    'sslverify'   => false,
-		);
-
+			'headers'     => array(
+			'Client-ID' => $client_id,
+		));
+		
 		$response = wp_remote_get($url, $args);
 		if (!is_wp_error($response)) {
 
 			$streamObj = json_decode($response['body']);
 
-			if ( $streamObj->stream ) {
+			if ( $streamObj->data ) {
 		    return true;
 			} else {
 				return false;
@@ -80,18 +82,20 @@ function twitch_is_live_shortcode( $atts = [], $content = null ) {
 		return false;
 	} else {
 
-    $url = 'https://api.twitch.tv/kraken/streams/'.$twitch_is_live_atts['twitchname'].'?client_id='. $client_id;
+    $url = 'https://api.twitch.tv/helix/streams?user_login='.$twitch_is_live_atts['twitchname'];
 
 		$args = array(
 		    'sslverify'   => false,
-		);
+			'headers'     => array(
+			'Client-ID' => $client_id,
+		));
 
 		$response = wp_remote_get($url, $args);
 		if (!is_wp_error($response)) {
 
 			$streamObj = json_decode($response['body']);
 
-			if ( $streamObj->stream ) {
+			if ( $streamObj->data ) {
 		    return $content;
 			} else {
 				return false;
@@ -132,18 +136,20 @@ function twitch_is_not_live_shortcode( $atts = [], $content = null ) {
 		return false;
 	} else {
 
-    $url = 'https://api.twitch.tv/kraken/streams/'.$twitch_is_not_live_atts['twitchname'].'?client_id='. $client_id;
+    $url = 'https://api.twitch.tv/helix/streams?user_login='.$twitch_is_not_live_atts['twitchname'];
 
 		$args = array(
 		    'sslverify'   => false,
-		);
+			'headers'     => array(
+			'Client-ID' => $client_id,
+		));
 
-		$response = wp_remote_get($url, $args);
+ 		$response = wp_remote_get($url, $args);
 		if (!is_wp_error($response)) {
 
 			$streamObj = json_decode($response['body']);
 
-			if ( !$streamObj->stream ) {
+			if ( !$streamObj->data ) {
 		    return $content;
 			} else {
 				return false;
@@ -161,7 +167,7 @@ function twitch_is_not_live_shortcode( $atts = [], $content = null ) {
 
 function twitch_shortcodes()
 {
-		add_shortcode('twitch_is_live', 'twitch_is_live_shortcode');
+	add_shortcode('twitch_is_live', 'twitch_is_live_shortcode');
     add_shortcode('twitch_is_not_live', 'twitch_is_not_live_shortcode');
 }
 
@@ -185,19 +191,21 @@ add_action('init', 'twitch_shortcodes');
  		return false;
  	} else {
 
-     $url = 'https://api.twitch.tv/kraken/streams/'.$twitchname.'?client_id='. $client_id;
+     $url = 'https://api.twitch.tv/helix/streams?user_login='.$twitchname;
 
- 		$args = array(
- 		    'sslverify'   => false,
- 		);
-
+		$args = array(
+		    'sslverify'   => false,
+			'headers'     => array(
+			'Client-ID' => $client_id,
+		));
+		
  		$response = wp_remote_get($url, $args);
  		if (!is_wp_error($response)) {
 
  			$streamObj = json_decode($response['body']);
 
- 			if ( $streamObj->stream ) {
- 		    return $streamObj->stream;
+ 			if ( $streamObj->data ) {
+ 		    return $streamObj->data;
  			} else {
  				return false;
  			}
