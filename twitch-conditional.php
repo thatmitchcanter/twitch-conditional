@@ -9,53 +9,8 @@
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       twitch-conditional
- * Twitch IS live Template Tag
- *
- *
- *
- * <?php if (twitch_is_live('username')) { CONTENT } ; ?>
- * Displays content the channel IS live. Template Tag Usage
  */
 
-function twitch_is_live( $twitchname = null) {
-
-	$client_id = get_option('twitch_client_id');
-	$client_id = $client_id['clientid'];
-
-	if (strlen($client_id) < 1) {
-		print "No Client ID Specified!";
-		return false;
-	} elseif ($twitchname == null) {
-		print "No Twitch Name Specified!";
-		return false;
-	} else {
-
-    $url = 'https://api.twitch.tv/helix/streams?user_login='.$twitchname;
-
-		$args = array(
-		    'sslverify'   => false,
-			'headers'     => array(
-			'Client-ID' => $client_id,
-		));
-		
-		$response = wp_remote_get($url, $args);
-		if (!is_wp_error($response)) {
-
-			$streamObj = json_decode($response['body']);
-
-			if ( $streamObj->data ) {
-		    return true;
-			} else {
-				return false;
-			}
-
-		} else {
-			print "Unable to access Twitch API.";
-			return false;
-		}
-
-	}
-}
 
 /*
  * Twitch IS live Shortcode
@@ -67,45 +22,80 @@ function twitch_is_live_shortcode( $atts = [], $content = null ) {
 	$atts = array_change_key_case((array)$atts, CASE_LOWER);
 
 	$twitch_is_live_atts = shortcode_atts(
-		[
-				'twitchname' => 'thatmitchcanter'
-		], $atts);
-
+		[ 'user' => 'lofilion'], $atts
+	);
+	
 	$client_id = get_option('twitch_client_id');
-	$client_id = $client_id['clientid'];
+	$client_id = $client_id['client_id'];
+	$client_secret = get_option('twitch_client_id');
+	$client_secret = $client_secret['client_secret'];
 
 	if (strlen($client_id) < 1) {
+
 		print "No Client ID Specified!";
 		return false;
-	} elseif ($twitch_is_live_atts['twitchname'] == null) {
-		print "No Twitch Name Specified!";
+
+	} elseif (strlen($client_secret) < 1) {
+
+		print "No Client Secret Specified!";
 		return false;
+
 	} else {
 
-    $url = 'https://api.twitch.tv/helix/streams?user_login='.$twitch_is_live_atts['twitchname'];
+		// all systems go. let's get an access token!
+		$url = 'https://id.twitch.tv/oauth2/token?client_id='.$client_id.'&client_secret='.$client_secret.'&grant_type=client_credentials';
 
-		$args = array(
-		    'sslverify'   => false,
-			'headers'     => array(
-			'Client-ID' => $client_id,
-		));
-
-		$response = wp_remote_get($url, $args);
-		if (!is_wp_error($response)) {
+ 		$response = wp_remote_post($url);
+ 		if (!is_wp_error($response)) {
 
 			$streamObj = json_decode($response['body']);
+			if ( $streamObj ) {
 
-			if ( $streamObj->data ) {
-		    return $content;
+				// grab the token. store the token. love the token.
+				$token = $streamObj->access_token;
+				
+				// all systems go.  grab the user data!
+				$user = $atts['user'];
+				
+				$url = 'https://api.twitch.tv/helix/streams?user_login='.$user;
+				$args = array(
+					'headers'     => array(
+						'client-id' => $client_id,
+						'Authorization' => 'Bearer '.$token
+					)
+				);
+
+				$response = wp_remote_get($url, $args);
+				if (!is_wp_error($response)) {
+		
+					$stream = json_decode($response['body']);
+		
+					if ( $stream->data ) {
+						return $content;
+					} else {
+						return false;
+					}
+		
+				} else {
+					print "Unable to access Twitch API.";
+					return false;
+				}		
+
+
 			} else {
+
+				echo "Unable to Authenticate.";
 				return false;
+
 			}
 
-		} else {
-			print "Unable to access Twitch API.";
-			return false;
-		}
 
+ 		} else {
+
+ 			print "Unable to access Twitch API.";
+			 return false;
+			 
+ 		}		
 
 	}
 
@@ -120,104 +110,98 @@ function twitch_is_live_shortcode( $atts = [], $content = null ) {
 function twitch_is_not_live_shortcode( $atts = [], $content = null ) {
 	$atts = array_change_key_case((array)$atts, CASE_LOWER);
 
-	$twitch_is_not_live_atts = shortcode_atts(
-		[
-				'twitchname' => 'thatmitchcanter'
-		], $atts);
-
+	$twitch_is_live_atts = shortcode_atts(
+		[ 'user' => 'lofilion'], $atts
+	);
+	
 	$client_id = get_option('twitch_client_id');
-	$client_id = $client_id['clientid'];
+	$client_id = $client_id['client_id'];
+	$client_secret = get_option('twitch_client_id');
+	$client_secret = $client_secret['client_secret'];
 
 	if (strlen($client_id) < 1) {
+
 		print "No Client ID Specified!";
 		return false;
-	} elseif ($twitch_is_not_live_atts['twitchname'] == null) {
-		print "No Twitch Name Specified!";
+
+	} elseif (strlen($client_secret) < 1) {
+
+		print "No Client Secret Specified!";
 		return false;
+
 	} else {
 
-    $url = 'https://api.twitch.tv/helix/streams?user_login='.$twitch_is_not_live_atts['twitchname'];
+		// all systems go. let's get an access token!
+		$url = 'https://id.twitch.tv/oauth2/token?client_id='.$client_id.'&client_secret='.$client_secret.'&grant_type=client_credentials';
 
-		$args = array(
-		    'sslverify'   => false,
-			'headers'     => array(
-			'Client-ID' => $client_id,
-		));
-
- 		$response = wp_remote_get($url, $args);
-		if (!is_wp_error($response)) {
+ 		$response = wp_remote_post($url);
+ 		if (!is_wp_error($response)) {
 
 			$streamObj = json_decode($response['body']);
+			if ( $streamObj ) {
 
-			if ( !$streamObj->data ) {
-		    return $content;
+				// grab the token. store the token. love the token.
+				$token = $streamObj->access_token;
+				
+				// all systems go.  grab the user data!
+				$user = $atts['user'];
+				
+				$url = 'https://api.twitch.tv/helix/streams?user_login='.$user;
+				$args = array(
+					'headers'     => array(
+						'client-id' => $client_id,
+						'Authorization' => 'Bearer '.$token
+					)
+				);
+
+				$response = wp_remote_get($url, $args);
+				if (!is_wp_error($response)) {
+		
+					$stream = json_decode($response['body']);
+		
+					if ( !$stream->data ) {
+						return $content;
+					} else {
+						return false;
+					}
+		
+				} else {
+					print "Unable to access Twitch API.";
+					return false;
+				}		
+
+
 			} else {
+
+				echo "Unable to Authenticate.";
 				return false;
+
 			}
 
-		} else {
-			print "Unable to access Twitch API.";
-			return false;
-		}
 
+ 		} else {
+
+ 			print "Unable to access Twitch API.";
+			 return false;
+			 
+ 		}		
 
 	}
 
 }
 
+/*
+ * Add Shortcodes to Twitch
+ */
+
 function twitch_shortcodes()
 {
-	add_shortcode('twitch_is_live', 'twitch_is_live_shortcode');
-    add_shortcode('twitch_is_not_live', 'twitch_is_not_live_shortcode');
+	add_shortcode('twitch_live', 'twitch_is_live_shortcode');
+    add_shortcode('twitch_offline', 'twitch_is_not_live_shortcode');
+
 }
 
 add_action('init', 'twitch_shortcodes');
-
-/*
- * Twitch Object
- * Gathers the Twitch Object in a Variable if the user is live.
- */
-
- function twitch_object( $twitchname = null) {
-
- 	$client_id = get_option('twitch_client_id');
- 	$client_id = $client_id['clientid'];
-
- 	if (strlen($client_id) < 1) {
- 		print "No Client ID Specified!";
- 		return false;
- 	} elseif ($twitchname == null) {
- 		print "No Twitch Name Specified!";
- 		return false;
- 	} else {
-
-     $url = 'https://api.twitch.tv/helix/streams?user_login='.$twitchname;
-
-		$args = array(
-		    'sslverify'   => false,
-			'headers'     => array(
-			'Client-ID' => $client_id,
-		));
-		
- 		$response = wp_remote_get($url, $args);
- 		if (!is_wp_error($response)) {
-
- 			$streamObj = json_decode($response['body']);
-
- 			if ( $streamObj->data ) {
- 		    return $streamObj->data;
- 			} else {
- 				return false;
- 			}
-
- 		} else {
- 			print "Unable to access Twitch API.";
- 			return false;
- 		}
-
- 	}
- }
-
 
 /**
  * Options Panel
@@ -294,12 +278,21 @@ class TwitchConditionalSettings
         );
 
         add_settings_field(
-            'client_ID',
+            'client_id',
             'Client ID',
             array( $this, 'clientid_callback' ),
             'twitch-conditional-settings',
             'twitch_section_id'
-        );
+		);
+		
+        add_settings_field(
+            'client_secret',
+            'Client Secret',
+            array( $this, 'clientsecret_callback' ),
+            'twitch-conditional-settings',
+            'twitch_section_id'
+		);
+				
     }
 
     /**
@@ -311,8 +304,11 @@ class TwitchConditionalSettings
     {
         $new_input = array();
 
-        if( isset( $input['clientid'] ) )
-            $new_input['clientid'] = sanitize_text_field( $input['clientid'] );
+        if( isset( $input['client_id'] ) )
+			$new_input['client_id'] = sanitize_text_field( $input['client_id'] );
+			
+		if( isset( $input['client_secret'] ) )
+            $new_input['client_secret'] = sanitize_text_field( $input['client_secret'] );			
 
         return $new_input;
     }
@@ -328,24 +324,24 @@ class TwitchConditionalSettings
     /**
      * Get the settings option array and print one of its values
      */
-    public function id_number_callback()
-    {
-        printf(
-            '<input type="text" id="id_number" name="twitch_client_id[id_number]" value="%s" />',
-            isset( $this->options['id_number'] ) ? esc_attr( $this->options['id_number']) : ''
-        );
-    }
-
-    /**
-     * Get the settings option array and print one of its values
-     */
     public function clientid_callback()
     {
         printf(
-            '<input type="text" id="clientid" name="twitch_client_id[clientid]" value="%s" />',
-            isset( $this->options['clientid'] ) ? esc_attr( $this->options['clientid']) : ''
+            '<input type="text" id="client_id" name="twitch_client_id[client_id]" value="%s" />',
+            isset( $this->options['client_id'] ) ? esc_attr( $this->options['client_id']) : ''
         );
-    }
+	}
+	
+    /**
+     * Get the settings option array and print one of its values
+     */
+    public function clientsecret_callback()
+    {
+        printf(
+            '<input type="text" id="client_secret" name="twitch_client_id[client_secret]" value="%s" />',
+            isset( $this->options['client_secret'] ) ? esc_attr( $this->options['client_secret']) : ''
+        );
+    }	
 }
 
 if( is_admin() )
