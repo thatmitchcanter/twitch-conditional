@@ -8,11 +8,11 @@ This plugin has a very simple task: to check Twitch to see if a streamer is broa
 
 ## Shortcode Usage
 
-	[twitch_live twitchname='username'] ... [/twitch_live]
+	[twitch_live user='username'] ... [/twitch_live]
 
 This will show content if the streamer is live.
 
-	[twitch_offline twitchname='username'] ... [/twitch_offline]
+	[twitch_offline user='username'] ... [/twitch_offline]
 
 This will show content if the streamer is NOT live.
 
