@@ -3,7 +3,7 @@
  * @twitch-conditional
  * Plugin Name:       Twitch Conditional
  * Description:       Allows a template tag to check a Twitch stream and display content is the streamer is live.
- * Version:           1.3.0
+ * Version:           2.0
  * Author:            Mitch Canter
  * Author URI:        http://www.mitchcanter.com/
  * License:           GPL-2.0+
@@ -14,7 +14,7 @@
 
 /*
  * Twitch IS live Shortcode
- * [twitch_is_live twitchname='username']
+ * [twitch_live user='username']
  * Displays content the channel IS live. Shortcode Usage
  */
 
@@ -103,7 +103,7 @@ function twitch_is_live_shortcode( $atts = [], $content = null ) {
 
 /*
  * Twitch IS NOT live Shortcode
- * [twitch_is_not_live twitchname='username']
+ * [twitch_offline user='username']
  * Displays content the channel IS NOT live. Shortcode Usage
  */
 
