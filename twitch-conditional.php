@@ -190,6 +190,148 @@ function twitch_is_not_live_shortcode( $atts = [], $content = null ) {
 
 }
 
+
+/*
+ * Twitch Host Helper
+ * [twitch_hosthelper game='Game Title']
+ */
+
+function twitch_host_shortcode( $atts = []) {
+	$atts = array_change_key_case((array)$atts, CASE_LOWER);
+
+	$twitch_is_live_atts = shortcode_atts(
+		[ 'game' => 'Final Fantasy XIV Online'], $atts
+	);
+	
+	$client_id = get_option('twitch_client_id');
+	$client_id = $client_id['client_id'];
+	$client_secret = get_option('twitch_client_id');
+	$client_secret = $client_secret['client_secret'];
+
+	if (strlen($client_id) < 1) {
+
+		print "No Client ID Specified!";
+		return false;
+
+	} elseif (strlen($client_secret) < 1) {
+
+		print "No Client Secret Specified!";
+		return false;
+
+	} else {
+
+		// all systems go. let's get an access token!
+		$url = 'https://id.twitch.tv/oauth2/token?client_id='.$client_id.'&client_secret='.$client_secret.'&grant_type=client_credentials';
+
+ 		$response = wp_remote_post($url);
+ 		if (!is_wp_error($response)) {
+
+			$streamObj = json_decode($response['body']);
+			if ( $streamObj ) {
+
+				// grab the token. store the token. love the token.
+				$token = $streamObj->access_token;
+				
+				// all systems go.  grab the user data!
+				$game = $atts['game'];
+				
+				$url = 'https://api.twitch.tv/helix/games?name='.$game;
+				$args = array(
+					'headers'     => array(
+						'client-id' => $client_id,
+						'Authorization' => 'Bearer '.$token
+					)
+				);
+
+				$response = wp_remote_get($url, $args);
+				if (!is_wp_error($response)) {
+		
+					$stream = json_decode($response['body']);
+                    $stream = $stream->data[0];
+
+                    if ( $stream ) {
+
+                        $game_id = $stream->id;
+                        $url = 'https://api.twitch.tv/helix/streams?game_id='.$game_id;
+                        $args = array(
+                            'headers'     => array(
+                                'client-id' => $client_id,
+                                'Authorization' => 'Bearer '.$token
+                            )
+                        );       
+                        
+                        $response = wp_remote_get($url, $args);
+                        if (!is_wp_error($response)) {
+                
+                            $stream = json_decode($response['body']);
+                            $streams = $stream->data;
+
+                            if ( $streams ) {
+                                foreach ($streams as $stream){
+
+                                    $thumbnail_url = $stream->thumbnail_url;
+                                    $thumbnail_url = str_replace("{width}", "1280", $thumbnail_url);
+                                    $thumbnail_url = str_replace("{height}", "800", $thumbnail_url);
+
+                                    $output .= "<table>";
+                                    $output .= "<tr>";
+                                    $output .= "<th>Username</th>";
+                                    $output .= "<th>Stream Title</th>";
+                                    $output .= "<th>Viewer Count</th>";
+                                    $output .= "</tr>";
+                                    $output .= "<tr>";
+                                    $output .= "<td>".$stream->user_name."</td>";
+                                    $output .= "<td>".$stream->title."</td>";
+                                    $output .= "<td>".$stream->viewer_count."</td>";
+                                    $output .= "</tr>";
+                                    $output .= "<tr>";
+                                    $output .= "<td colspan='3'><img src='".$thumbnail_url."' /></td>";
+                                    $output .= "</tr>";                                    
+                                    $output .= "<tr>";
+                                    $output .= "<td colspan='3'><strong>Host Command:</strong> /host ". $stream->user_name ."</td>";
+                                    $output .= "</tr>";
+                                }
+                                $output .= "</table>";
+                                return $output;
+                            } else {
+                                return false;
+                            }
+                
+                        } else {
+                            print "Unable to access Twitch API.";
+                            return false;
+                        }
+
+
+					} else {
+						return false;
+					}
+		
+				} else {
+					print "Unable to access Twitch API.";
+					return false;
+				}		
+
+
+			} else {
+
+				echo "Unable to Authenticate.";
+				return false;
+
+			}
+
+
+ 		} else {
+
+ 			print "Unable to access Twitch API.";
+			 return false;
+			 
+ 		}		
+
+	}
+
+}
+
 /*
  * Add Shortcodes to Twitch
  */
@@ -198,6 +340,8 @@ function twitch_shortcodes()
 {
 	add_shortcode('twitch_live', 'twitch_is_live_shortcode');
     add_shortcode('twitch_offline', 'twitch_is_not_live_shortcode');
+	add_shortcode('twitch_host', 'twitch_host_shortcode');
+
 
 }
 
