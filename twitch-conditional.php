@@ -1,14 +1,14 @@
 <?php
 /**
- * @twitch-conditional
- * Plugin Name:       Twitch Conditional
- * Description:       Allows a template tag to check a Twitch stream and display content is the streamer is live.
+ * @twitchcraft
+ * Plugin Name:       Twitch Craft
+ * Description:       Allows a template tag to check a Twitch stream and display content if the streamer is live.
  * Version:           2.0
  * Author:            Mitch Canter
  * Author URI:        http://www.mitchcanter.com/
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
- * Text Domain:       twitch-conditional
+ * Text Domain:       twitchcraft
  */
 
 
@@ -102,7 +102,7 @@ function twitch_is_live_shortcode( $atts = [], $content = null ) {
 }
 
 /*
- * Twitch IS NOT live Shortcode
+ * Twitch IS NOT live Shortcode 
  * [twitch_offline user='username']
  * Displays content the channel IS NOT live. Shortcode Usage
  */
@@ -343,6 +343,20 @@ class TwitchConditionalSettings
         );
     }	
 }
+
+/**
+ * Registers the block using the metadata loaded from the `block.json` file.
+ * Behind the scenes, it registers also all assets so they can be enqueued
+ * through the block editor in the corresponding context.
+ *
+ * @see https://developer.wordpress.org/reference/functions/register_block_type/
+ */
+function create_block_twitchcraft_block_init() {
+	register_block_type( __DIR__ . '/build' );
+}
+add_action( 'init', 'create_block_twitchcraft_block_init' );
+
+
 
 if( is_admin() )
     $my_settings_page = new TwitchConditionalSettings();
