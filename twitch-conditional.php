@@ -18,12 +18,24 @@
  * Displays content the channel IS live. Shortcode Usage
  */
 
+/*
+ * Add Shortcodes to Twitch
+ */
+
+ function twitch_shortcodes() {
+	 add_shortcode('twitch_live', 'twitch_is_live_shortcode');
+	 add_shortcode('twitch_offline', 'twitc h_is_not_live_shortcode');
+ 
+ }
+
+ add_action('init', 'twitch_shortcodes');
+
 function twitch_is_live_shortcode( $atts = [], $content = null ) {
 	$atts = array_change_key_case((array)$atts, CASE_LOWER);
 
 	$twitch_is_live_atts = shortcode_atts(
 		[ 'user' => 'lofilion'], $atts
-	);
+	); 
 	
 	$client_id = get_option('twitch_client_id');
 	$client_id = $client_id['client_id'];
@@ -31,7 +43,7 @@ function twitch_is_live_shortcode( $atts = [], $content = null ) {
 	$client_secret = $client_secret['client_secret'];
 
 	if (strlen($client_id) < 1) {
-
+ 
 		print "No Client ID Specified!";
 		return false;
 
@@ -40,7 +52,7 @@ function twitch_is_live_shortcode( $atts = [], $content = null ) {
 		print "No Client Secret Specified!";
 		return false;
 
-	} else {
+	} else { 
 
 		// all systems go. let's get an access token!
 		$url = 'https://id.twitch.tv/oauth2/token?client_id='.$client_id.'&client_secret='.$client_secret.'&grant_type=client_credentials';
@@ -190,25 +202,12 @@ function twitch_is_not_live_shortcode( $atts = [], $content = null ) {
 
 }
 
-/*
- * Add Shortcodes to Twitch
- */
-
-function twitch_shortcodes()
-{
-	add_shortcode('twitch_live', 'twitch_is_live_shortcode');
-    add_shortcode('twitch_offline', 'twitch_is_not_live_shortcode');
-
-}
-
-add_action('init', 'twitch_shortcodes');
 
 /**
  * Options Panel
  */
 
-class TwitchConditionalSettings
-{
+class TwitchConditionalSettings {
     /**
      * Holds the values to be used in the fields callbacks
      */
@@ -352,11 +351,124 @@ class TwitchConditionalSettings
  * @see https://developer.wordpress.org/reference/functions/register_block_type/
  */
 function create_block_twitchcraft_block_init() {
-	register_block_type( __DIR__ . '/build' );
+	// register_block_type( __DIR__ . '/build' );
+	register_block_type(
+		__DIR__ . '/build', array(
+			'render_callback' => 'render_block_twitchcraft',
+		)
+	);
 }
 add_action( 'init', 'create_block_twitchcraft_block_init' );
 
+/**
+ * Displays the content on the frontend based on if a channel is live or not.
+ *
+ * @param array  $attributes The attributes passed by the block.
+ * @param string $content The block content
+ * @return string
+ *
+ */
+function render_block_twitchcraft( $attributes, $content ) {
+	ob_start();
+	$channel = is_channel_live( $attributes['userName'] );
+	if ( isset( $channel['is_live'] ) ) {
+?>
+	<div><?php echo $attributes['liveContent']; ?></div>
+<?php
+	} else {
+?>
+	<div><?php echo $attributes['offlineContent']; ?></div>
+<?php
+	}
+	return ob_get_clean();
+}
 
 
 if( is_admin() )
     $my_settings_page = new TwitchConditionalSettings();
+
+/** 
+ * Check if the Twitch Channel is currently live.
+ *
+ * @param string $username
+ * @param array 
+ */
+function is_channel_live( $username ) {
+  
+	$twitch_data   = [];
+	$client_id     = get_option( 'twitch_client_id' );
+	$client_id     = $client_id[ 'client_id' ];
+	$client_secret = get_option( 'twitch_client_id' );
+	$client_secret = $client_secret[ 'client_secret' ];
+
+	if ( strlen( $client_id ) < 1 ) {
+
+		print "No Client ID Specified!";
+		return false;
+
+	} elseif (strlen( $client_secret ) < 1) {
+
+		print "No Client Secret Specified!";
+		return false;
+
+	} else {
+
+		// all systems go. let's get an access token!
+        $url = sprintf( "https://id.twitch.tv/oauth2/token?client_id=%s&client_secret=%s&grant_type=client_credentials", $client_id, $client_secret );
+		
+ 		$response = wp_remote_post( $url );
+ 		if ( !is_wp_error( $response ) ) {
+
+			$stream_obj = json_decode( $response['body'] );
+			if ( $stream_obj ) {
+				// grab the token. store the token. love the token.
+				$token = $stream_obj->access_token;
+								
+				$url = sprintf( "https://api.twitch.tv/helix/streams?user_login=%s", $username );
+				$args = array(
+					'headers'     => array(
+						'client-id' => $client_id,
+						'Authorization' => 'Bearer '. $token
+					)
+				);
+
+				$response = wp_remote_get( $url, $args );
+				if ( ! is_wp_error( $response ) ) {
+					$stream = json_decode( $response['body'] );
+		
+					if ( ! empty ( $stream->data ) ) {
+						$twitch_data['is_live'] = true;
+					}		
+				} else {
+					$twitch_data = [
+						'message' => __( "Unable to access Twitch API", 'twitchcraft' ),
+						'error'   => true,
+					];
+				}		
+			} else {
+				$twitch_data = [
+					'message' => __( "Unable to Authenticate.", 'twitchcraft' ),
+					'error'   => true,
+				];
+			}
+
+ 		} else {
+			$twitch_data = [
+				'message' => __( "Unable to access Twitch API.", 'twitchcraft' ),
+				'error'   => true,
+			];
+ 		}		
+
+	}
+    return $twitch_data;
+}
+
+// add_action( 'rest_api_init', 'twitch_live_route' );
+
+// function twitch_live_route() {
+//     register_rest_route( 'twitchcraft/v1', '/is-channel-live/(?P<username>[a-zA-Z0-9-]+)', [
+//         'methods' => 'GET',
+//         'callback' => 'is_channel_live',
+// 		'permission_callback' => '__return_true' 
+//     ]);
+// }
