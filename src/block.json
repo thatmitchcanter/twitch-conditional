@@ -5,8 +5,8 @@
 	"version": "0.1.0",
 	"title": "Twitchcraft",
 	"category": "widgets",
-	"icon": "smiley",
-	"description": "Example block scaffolded with Create Block tool.",
+	"icon": "twitch",
+	"description": "Display conditional content if a Twitch Channel is live or not.",
 	"supports": {
 		"html": false
 	},
