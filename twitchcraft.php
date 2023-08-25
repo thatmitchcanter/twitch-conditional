@@ -188,6 +188,7 @@ function twitch_is_not_live_shortcode( $atts = array(), $content = null ) {
 
 /**
  * Options Panel
+ *
  */
 
 class TwitchConditionalSettings {
@@ -250,7 +251,7 @@ class TwitchConditionalSettings {
 
 		add_settings_section(
 			'twitch_section_id', // ID.
-			'Twitch Conditional Settings', // clientid
+			'Twitch Conditional Settings', // clientid.
 			array( $this, 'print_section_info' ), // Callback.
 			'twitch-conditional-settings' // Page.
 		);
@@ -349,11 +350,11 @@ function render_block_twitchcraft( $attributes, $content ) {
 	$channel = is_channel_live( $attributes['userName'] );
 	if ( isset( $channel['is_live'] ) ) {
 		?>
-	<div><?php echo $attributes['liveContent']; ?></div>
+	<div><?php echo wp_kses_post( $attributes['liveContent'] ); ?></div>
 		<?php
 	} else {
 		?>
-	<div><?php echo $attributes['offlineContent']; ?></div>
+	<div><?php echo wp_kses_post( $attributes['offlineContent'] ); ?></div>
 		<?php
 	}
 	return ob_get_clean();
@@ -367,8 +368,8 @@ if ( is_admin() ) {
 /**
  * Check if the Twitch Channel is currently live.
  *
- * @param string $username
- * @param array
+ * @param string $username The channel name.
+ * @param array  $twich_data an array of data with error information and channel status.
  */
 function is_channel_live( $username ) {
 
