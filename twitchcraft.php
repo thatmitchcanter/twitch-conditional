@@ -18,7 +18,7 @@
  */
 function twitch_shortcodes() {
 	add_shortcode( 'twitch_live', 'twitch_is_live_shortcode' );
-	add_shortcode( 'twitch_offline', 'twitc h_is_not_live_shortcode' );
+	add_shortcode( 'twitch_offline', 'twitch_is_not_live_shortcode' );
 }
 
 add_action( 'init', 'twitch_shortcodes' );
